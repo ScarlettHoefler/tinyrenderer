@@ -4,7 +4,7 @@
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
 
-void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
+void drawWideLine(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     int width = std::abs(x0-x1);
     int height = std::abs(y0-y1);
     
@@ -21,6 +21,39 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
         
         image.set(x, targetY, color);
     }
+}
+
+void drawTallLine(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
+    int width = std::abs(x0-x1);
+    int height = std::abs(y0-y1);
+    
+    if (y0 > y1) {
+        std::swap(x0,x1);
+        std::swap(y0,y1);
+    }
+    
+    for (int y = y0; y <= y1; ++y) {
+        float t = (float)(y-y0) / height;
+        
+        int targetX = x0 + (t * width);
+        std::cout << "x = " << targetX << ", y = " << y << "; t = " << t << std::endl;
+        
+        image.set(targetX, y, color);
+    }
+}
+
+void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
+    int width = std::abs(x0-x1);
+    int height = std::abs(y0-y1);
+    bool widerThanTall = width > height;
+    
+    if (widerThanTall) {
+        drawWideLine(x0, y0, x1, y1, image, color);
+    } else {
+        drawTallLine(x0, y0, x1, y1, image, color);
+    }
+    
+   
 }
 
 
