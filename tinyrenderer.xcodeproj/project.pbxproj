@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3EE5187121FC4FFA00AB2318 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5187021FC4FFA00AB2318 /* main.cpp */; };
+		3EE5188321FC627F00AB2318 /* tgaimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5187F21FC627F00AB2318 /* tgaimage.cpp */; };
+		3EE5188421FC627F00AB2318 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188021FC627F00AB2318 /* Makefile */; };
+		3EE5188521FC627F00AB2318 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188221FC627F00AB2318 /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +26,10 @@
 
 /* Begin PBXFileReference section */
 		3EE5186D21FC4FFA00AB2318 /* tinyrenderer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tinyrenderer; sourceTree = BUILT_PRODUCTS_DIR; };
-		3EE5187021FC4FFA00AB2318 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		3EE5187F21FC627F00AB2318 /* tgaimage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tgaimage.cpp; sourceTree = "<group>"; };
+		3EE5188021FC627F00AB2318 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		3EE5188121FC627F00AB2318 /* tgaimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tgaimage.h; sourceTree = "<group>"; };
+		3EE5188221FC627F00AB2318 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +62,10 @@
 		3EE5186F21FC4FFA00AB2318 /* tinyrenderer */ = {
 			isa = PBXGroup;
 			children = (
-				3EE5187021FC4FFA00AB2318 /* main.cpp */,
+				3EE5188221FC627F00AB2318 /* main.cpp */,
+				3EE5188021FC627F00AB2318 /* Makefile */,
+				3EE5187F21FC627F00AB2318 /* tgaimage.cpp */,
+				3EE5188121FC627F00AB2318 /* tgaimage.h */,
 			);
 			path = tinyrenderer;
 			sourceTree = "<group>";
@@ -118,7 +126,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3EE5187121FC4FFA00AB2318 /* main.cpp in Sources */,
+				3EE5188421FC627F00AB2318 /* Makefile in Sources */,
+				3EE5188321FC627F00AB2318 /* tgaimage.cpp in Sources */,
+				3EE5188521FC627F00AB2318 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
