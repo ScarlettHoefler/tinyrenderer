@@ -1,10 +1,16 @@
 #include "tgaimage.h"
 #include <iostream>
+#include <cassert>
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
+    assert(x0 > 0 && x0 < image.get_width());
+    assert(x1 > 0 && x1 < image.get_width());
+    assert(y0 > 0 && y0 < image.get_height());
+    assert(y1 > 0 && y1 < image.get_height());
+    
     const bool tallerThanWide = std::abs(y0-y1) > std::abs(x0-x1);
     
     bool axesTransposed = false;
