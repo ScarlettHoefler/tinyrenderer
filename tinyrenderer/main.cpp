@@ -1,9 +1,13 @@
 #include "tgaimage.h"
+#include "ObjModel.h"
 #include <iostream>
 #include <cassert>
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
+
+const int ImageWidth = 800;
+const int ImageHeight = 800;
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     assert(x0 > 0 && x0 < image.get_width());
@@ -45,7 +49,10 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 
 
 int main(int argc, char** argv) {
-	TGAImage image(100, 100, TGAImage::RGB);
+	TGAImage image(ImageWidth, ImageHeight, TGAImage::RGB);
+    
+    ObjModel model;
+    model.LoadFromFile("obj/head.obj");
     
     line(13, 20, 80, 40, image, white);
     line(20, 13, 40, 80, image, red);

@@ -10,13 +10,14 @@
 		3EE5188321FC627F00AB2318 /* tgaimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5187F21FC627F00AB2318 /* tgaimage.cpp */; };
 		3EE5188421FC627F00AB2318 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188021FC627F00AB2318 /* Makefile */; };
 		3EE5188521FC627F00AB2318 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188221FC627F00AB2318 /* main.cpp */; };
+		3EE5188A21FD288800AB2318 /* ObjModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188821FD288800AB2318 /* ObjModel.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		3EE5186B21FC4FFA00AB2318 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
+			dstPath = /usr/share/man/man1;
 			dstSubfolderSpec = 0;
 			files = (
 			);
@@ -30,6 +31,8 @@
 		3EE5188021FC627F00AB2318 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		3EE5188121FC627F00AB2318 /* tgaimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tgaimage.h; sourceTree = "<group>"; };
 		3EE5188221FC627F00AB2318 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		3EE5188821FD288800AB2318 /* ObjModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ObjModel.cpp; sourceTree = "<group>"; };
+		3EE5188921FD288800AB2318 /* ObjModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjModel.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +69,8 @@
 				3EE5188021FC627F00AB2318 /* Makefile */,
 				3EE5187F21FC627F00AB2318 /* tgaimage.cpp */,
 				3EE5188121FC627F00AB2318 /* tgaimage.h */,
+				3EE5188821FD288800AB2318 /* ObjModel.cpp */,
+				3EE5188921FD288800AB2318 /* ObjModel.h */,
 			);
 			path = tinyrenderer;
 			sourceTree = "<group>";
@@ -127,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3EE5188421FC627F00AB2318 /* Makefile in Sources */,
+				3EE5188A21FD288800AB2318 /* ObjModel.cpp in Sources */,
 				3EE5188321FC627F00AB2318 /* tgaimage.cpp in Sources */,
 				3EE5188521FC627F00AB2318 /* main.cpp in Sources */,
 			);
