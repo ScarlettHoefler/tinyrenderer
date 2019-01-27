@@ -10,11 +10,6 @@ const int ImageWidth = 800;
 const int ImageHeight = 800;
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
-    assert(x0 > 0 && x0 < image.get_width());
-    assert(x1 > 0 && x1 < image.get_width());
-    assert(y0 > 0 && y0 < image.get_height());
-    assert(y1 > 0 && y1 < image.get_height());
-    
     const bool tallerThanWide = std::abs(y0-y1) > std::abs(x0-x1);
     
     bool axesTransposed = false;
@@ -46,17 +41,29 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     }
 }
 
+void drawModel(const ObjModel& model, TGAImage &image) {
+    for (int faceIndex = 0; faceIndex < model.numFaces(); ++faceIndex) {
+        ModelFace face = model.faceAtIndex(faceIndex);
+        const int VerticesPerFace = 3;
+        for (int i = 0; i < VerticesPerFace; ++i) {
+            Vector3 v0 = model.vertexAtIndex(face[i]);
+            Vector3 v1 = model.vertexAtIndex(face[(i+1) % VerticesPerFace]);
+            int x0 = (v0.x + 1.f) * ImageWidth / 2.f;
+            int y0 = (v0.y + 1.f) * ImageHeight / 2.f;
+            int x1 = (v1.x + 1.f) * ImageWidth / 2.f;
+            int y1 = (v1.y + 1.f) * ImageHeight / 2.f;
+            line(x0, y0, x1, y1, image, white);
+        }
+    }
+}
 
 
 int main(int argc, char** argv) {
 	TGAImage image(ImageWidth, ImageHeight, TGAImage::RGB);
     
     ObjModel model;
-    model.LoadFromFile("obj/head.obj");
-    
-    line(13, 20, 80, 40, image, white);
-    line(20, 13, 40, 80, image, red);
-    line(80, 40, 13, 20, image, red);
+    model.loadFromFile("obj/head.obj");
+    drawModel(model, image);
     
 	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	image.write_tga_file("output.tga");
