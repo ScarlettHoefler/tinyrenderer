@@ -9,8 +9,8 @@ const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue  = TGAColor(0,   0,   255, 255);
 
-const int ImageWidth = 800;
-const int ImageHeight = 800;
+const int ImageWidth = 200;
+const int ImageHeight = 200;
 
 template<typename T>
 struct Vector2 {
@@ -64,7 +64,19 @@ void line(Vector2i v0, Vector2i v1, TGAImage &image, TGAColor color) {
     line(v0.x, v0.y, v1.x, v1.y, image, color);
 }
 
+void sweepLine(int leftX, int rightX, int y, TGAImage &image, TGAColor color) {
+    for (int x = leftX; x <= rightX; ++x) {
+        image.set(x, y, color);
+    }
+}
+
 void triangle(Vector2i v0, Vector2i v1, Vector2i v2, TGAImage &image, TGAColor color) {
+    //* // Debug draw under
+    line(v0, v1, image, blue);
+    line(v1, v2, image, blue);
+    line(v2, v0, image, blue);
+    //*/
+    
     // Sort the 3 vectors from lowest to highest
     // 123 -> xx -> xx -> 123
     // 132 -> xx -> 123 -> 123
@@ -82,44 +94,42 @@ void triangle(Vector2i v0, Vector2i v1, Vector2i v2, TGAImage &image, TGAColor c
         std::swap(v0, v1);
     }
     
+    const int yDistV0toV1 = v1.y - v0.y;
+    const int yDistV0toV2 = v2.y - v0.y;
+    const int yDistV1toV2 = v2.y - v1.y;
+    
     // Draw bottom half of triangle
     for (int curY = v0.y; curY <= v1.y; ++curY) {
         // Two sides: t0 to t1, and t0 to t2
-        int yDistV0toV1 = v1.y - v0.y;
-        int startY = v0.y;
-        float tToV1 = (float)(curY - startY) / yDistV0toV1;
-        std::cout << "t: " << tToV1 << std::endl;
-        float x1 = v0.x + (v1.x - v0.x) * tToV1;
+        float tV0ToV1 = (float)(curY - v0.y) / yDistV0toV1;
+        float x1 = v0.x + (v1.x - v0.x) * tV0ToV1;
         
-        int yDistV0toV2 = v2.y - v0.y;
-        float tToV2 = (float)(curY - startY) / yDistV0toV2;
-        float x2 = v0.x + (v2.x - v0.x) * tToV2;
+        float tV0ToV2 = (float)(curY - v0.y) / yDistV0toV2;
+        float x2 = v0.x + (v2.x - v0.x) * tV0ToV2;
         
         if (x1 > x2) { std::swap(x1, x2); }
         
         int leftX = (int)floor(x1);
         int rightX = (int)ceil(x2);
-        line(leftX, curY, rightX, curY, image, color);
+        sweepLine(leftX, rightX, curY, image, color);
     }
     
     // Draw top half of triangle
     for (int curY = v1.y; curY <= v2.y; ++curY) {
-        int yDistV0toV2 = v2.y - v0.y;
-        int yDistV1toV2 = v2.y - v1.y;
-        
         float tV0toV2 = (float)(curY - v0.y) / yDistV0toV2;
-        float tV1toV2 = (float)(curY - v1.y) / yDistV1toV2;
         float x1 = v0.x + (v2.x - v0.x) * tV0toV2;
+        
+        float tV1toV2 = (float)(curY - v1.y) / yDistV1toV2;
         float x2 = v1.x + (v2.x - v1.x) * tV1toV2;
         
         if (x1 > x2) { std::swap(x1, x2); }
         
         int leftX = (int)floor(x1);
         int rightX = (int)ceil(x2);
-        line(leftX, curY, rightX, curY, image, color);
+        sweepLine(leftX, rightX, curY, image, color);
     }
     
-    //* // Debug draw over
+    /* // Debug draw over
     line(v0, v1, image, blue);
     line(v1, v2, image, blue);
     line(v2, v0, image, blue);
