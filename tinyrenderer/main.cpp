@@ -1,5 +1,6 @@
 #include "tgaimage.h"
 #include "ObjModel.h"
+#include "Vector.hpp"
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -12,27 +13,6 @@ const TGAColor blue  = TGAColor(0,   0,   255, 255);
 
 const int ImageWidth = 800;
 const int ImageHeight = 800;
-
-template<typename T>
-struct Vector2 {
-    union {
-        struct { T u, v; };
-        struct { T x, y; };
-        T raw[2];
-    };
-    
-    Vector2()
-    : Vector2(0,0)
-    {
-    }
-    
-    Vector2(T x, T y)
-    : x(x), y(y)
-    {
-    }
-};
-
-typedef Vector2<int> Vector2i;
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     const bool tallerThanWide = std::abs(y0-y1) > std::abs(x0-x1);
@@ -143,8 +123,8 @@ void drawHeadWireframe(TGAImage &image) {
         ModelFace face = model.faceAtIndex(faceIndex);
         const int VerticesPerFace = 3;
         for (int i = 0; i < VerticesPerFace; ++i) {
-            Vector3 v0 = model.vertexAtIndex(face[i]);
-            Vector3 v1 = model.vertexAtIndex(face[(i+1) % VerticesPerFace]);
+            Vector3f v0 = model.vertexAtIndex(face[i]);
+            Vector3f v1 = model.vertexAtIndex(face[(i+1) % VerticesPerFace]);
             int x0 = (v0.x + 1.f) * ImageWidth / 2.f;
             int y0 = (v0.y + 1.f) * ImageHeight / 2.f;
             int x1 = (v1.x + 1.f) * ImageWidth / 2.f;
@@ -163,31 +143,37 @@ void drawTestTriangles(TGAImage &image) {
     triangle(t2[0], t2[1], t2[2], image, green);
 }
 
-void drawHeadRandomColors(TGAImage &image) {
+void drawHeadShaded(TGAImage &image) {
     ObjModel model;
     model.loadFromFile("obj/head.obj");
     
-    std::random_device randomDevice;
-    std::default_random_engine randomEngine(randomDevice());
-    std::uniform_int_distribution<int> rgbUniformDist(0, 255);
+    Vector3f lightDirection(0,0,-1.f);
     
     const size_t numFaces = model.numFaces();
     for (int faceIndex = 0; faceIndex < numFaces; ++faceIndex) {
         ModelFace face = model.faceAtIndex(faceIndex);
-        Vector2i screenCoords[3];
+        Vector2i faceScreenCoords[3];
+        Vector3f faceWorldCoords[3];
         for (int iCoord = 0; iCoord < 3; ++iCoord) {
-            Vector3 worldCoords = model.vertexAtIndex(face[iCoord]);
+            Vector3f worldCoords = model.vertexAtIndex(face[iCoord]);
+            faceWorldCoords[iCoord] = worldCoords;
+            
             int xPos = (worldCoords.x + 1.f) * ImageWidth / 2.f;
             int yPos = (worldCoords.y + 1.f) * ImageHeight / 2.f;
-            screenCoords[iCoord] = Vector2i(xPos, yPos);
+            faceScreenCoords[iCoord] = Vector2i(xPos, yPos);
         }
         
-        int randomR = rgbUniformDist(randomEngine);
-        int randomG = rgbUniformDist(randomEngine);
-        int randomB = rgbUniformDist(randomEngine);
-        TGAColor randomColor(randomR, randomG, randomB, 255);
+        // Calculate color for triangle
+        Vector3f edge1 = faceWorldCoords[2] - faceWorldCoords[0];
+        Vector3f edge2 = faceWorldCoords[1] - faceWorldCoords[0];
+        Vector3f normal = (edge1.cross(edge2)).normalized();
+        float intensity = normal.dot(lightDirection);
         
-        triangle(screenCoords[0], screenCoords[1], screenCoords[2], image, randomColor);
+        if (intensity > 0) { // HACK: This does janky backface culling that isn't entirely correct
+            int greyIntensity = static_cast<int>(255 * intensity); // TODO: Gamma correction. (128,128,128) is not half as bright as (255,255,255)
+            TGAColor color(greyIntensity, greyIntensity, greyIntensity, 255);
+            triangle(faceScreenCoords[0], faceScreenCoords[1], faceScreenCoords[2], image, color);
+        }
     }
 }
 
@@ -195,7 +181,7 @@ void drawHeadRandomColors(TGAImage &image) {
 int main(int argc, char** argv) {
 	TGAImage image(ImageWidth, ImageHeight, TGAImage::RGB);
     
-    drawHeadRandomColors(image);
+    drawHeadShaded(image);
     
 	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	image.write_tga_file("output.tga");

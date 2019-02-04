@@ -11,6 +11,7 @@
 		3EE5188421FC627F00AB2318 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188021FC627F00AB2318 /* Makefile */; };
 		3EE5188521FC627F00AB2318 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188221FC627F00AB2318 /* main.cpp */; };
 		3EE5188A21FD288800AB2318 /* ObjModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EE5188821FD288800AB2318 /* ObjModel.cpp */; };
+		3EF6B08122081AFC007E812F /* Vector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3EF6B07F22081AFC007E812F /* Vector.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,6 +34,8 @@
 		3EE5188221FC627F00AB2318 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		3EE5188821FD288800AB2318 /* ObjModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ObjModel.cpp; sourceTree = "<group>"; };
 		3EE5188921FD288800AB2318 /* ObjModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjModel.h; sourceTree = "<group>"; };
+		3EF6B07F22081AFC007E812F /* Vector.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Vector.cpp; sourceTree = "<group>"; };
+		3EF6B08022081AFC007E812F /* Vector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Vector.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +74,8 @@
 				3EE5188121FC627F00AB2318 /* tgaimage.h */,
 				3EE5188821FD288800AB2318 /* ObjModel.cpp */,
 				3EE5188921FD288800AB2318 /* ObjModel.h */,
+				3EF6B07F22081AFC007E812F /* Vector.cpp */,
+				3EF6B08022081AFC007E812F /* Vector.hpp */,
 			);
 			path = tinyrenderer;
 			sourceTree = "<group>";
@@ -133,6 +138,7 @@
 			files = (
 				3EE5188421FC627F00AB2318 /* Makefile in Sources */,
 				3EE5188A21FD288800AB2318 /* ObjModel.cpp in Sources */,
+				3EF6B08122081AFC007E812F /* Vector.cpp in Sources */,
 				3EE5188321FC627F00AB2318 /* tgaimage.cpp in Sources */,
 				3EE5188521FC627F00AB2318 /* main.cpp in Sources */,
 			);

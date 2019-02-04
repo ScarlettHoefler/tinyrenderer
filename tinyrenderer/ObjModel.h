@@ -12,9 +12,7 @@
 #include <vector>
 #include <string>
 
-struct Vector3 {
-    float x,y,z;
-};
+#include "Vector.hpp"
 
 struct ModelFace {
     int a,b,c;
@@ -43,11 +41,11 @@ public:
     void loadFromFile(std::string filePath);
     
     size_t numFaces() const { return m_faces.size(); }
-    Vector3 vertexAtIndex(int index) const;
+    Vector3f vertexAtIndex(int index) const;
     ModelFace faceAtIndex(int index) const;
     
 private:
-    std::vector<Vector3> m_vertices;
+    std::vector<Vector3f> m_vertices;
     std::vector<ModelFace> m_faces;
 };
 

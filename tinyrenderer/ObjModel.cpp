@@ -33,7 +33,7 @@ void ObjModel::loadFromFile(std::string filePath) {
         if (nextLine.compare(0, 2, "v ") == 0) {
             // Vector
             // e.g. "v -0.000581696 -0.734665 -0.623267"
-            Vector3 vertexData;
+            Vector3f vertexData;
             std::string prefix;
             lineStream >> stringDiscard; // get rid of the "v "
             lineStream >> vertexData.x >> vertexData.y >> vertexData.z;
@@ -56,7 +56,7 @@ void ObjModel::loadFromFile(std::string filePath) {
     }
 }
 
-Vector3 ObjModel::vertexAtIndex(int index) const {
+Vector3f ObjModel::vertexAtIndex(int index) const {
     assert(index >= 0 && index < m_vertices.size());
     return m_vertices[index];
 }
