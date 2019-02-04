@@ -51,16 +51,13 @@ void line(Vector2i v0, Vector2i v1, TGAImage &image, TGAColor color) {
 }
 
 Vector3f getBarycentricCoordinatesForScreenPoint(Vector3f triangleA, Vector3f triangleB, Vector3f triangleC, Vector3f screenPoint) {
-    // P = A + u(AB) + v(AC)
-    // u(AB) + v(AC) + (PA) = 0
-    // then expand out to each coordinate: u(AB)x + v(AC)x + (PA)x = 0; same for Y coords
-    // to find where these intersect, we can use a cross product. See: https://github.com/ssloy/tinyrenderer/wiki/Lesson-2:-Triangle-rasterization-and-back-face-culling#the-method-i-adopt-for-my-code
+    // See: https://github.com/ssloy/tinyrenderer/wiki/Lesson-2:-Triangle-rasterization-and-back-face-culling#the-method-i-adopt-for-my-code
     Vector3f vAB = triangleB - triangleA;
     Vector3f vAC = triangleC - triangleA;
     Vector3f vPA = triangleA - screenPoint;
     
-    Vector3f xVector(vAB.x, vAC.x, vPA.x);
-    Vector3f yVector(vAB.y, vAC.y, vPA.y);
+    Vector3f xVector(vAC.x, vAB.x, vPA.x);
+    Vector3f yVector(vAC.y, vAB.y, vPA.y);
     Vector3f xCrossY = xVector.cross(yVector);
     
     // HACK: avoid divide by zero
@@ -82,7 +79,7 @@ T clamp(T val, T min, T max) {
     return val;
 }
 
-void triangle(const Vector3f points[3], TGAImage &image, float* zBuffer, const TGAColor color) {
+void triangle(const Vector3f points[3], const Vector2f texCoords[3], const TGAImage &diffuseTexture, TGAImage &image, float* zBuffer) {
     // Find the bounding rect of our triangle (in pixel coords) so that we only have to iterate over a small area
     const float floatMin = std::numeric_limits<float>::lowest();
     const float floatMax = std::numeric_limits<float>::max();
@@ -129,6 +126,17 @@ void triangle(const Vector3f points[3], TGAImage &image, float* zBuffer, const T
                 float currentZAtPosition = zBuffer[zBufferIndex];
                 if (currentZAtPosition < zPos) {
                     zBuffer[zBufferIndex] = zPos;
+                    
+                    Vector2f uv(0,0);
+                    for (int i = 0; i < 3; ++i) {
+                        uv.u += texCoords[i].u * barycentricCoords[i];
+                        uv.v += texCoords[i].v * barycentricCoords[i];
+                    }
+                    
+                    Vector2i colorPos((int)std::round(uv.u * diffuseTexture.get_width()),
+                                      (int)std::round(uv.v * diffuseTexture.get_height()));
+                    TGAColor color = diffuseTexture.get(colorPos.x, colorPos.y);
+                    
                     image.set(xPos, yPos, color);
                 }
             }
@@ -144,8 +152,8 @@ void drawHeadWireframe(TGAImage &image) {
         ModelFace face = model.faceAtIndex(faceIndex);
         const int VerticesPerFace = 3;
         for (int i = 0; i < VerticesPerFace; ++i) {
-            Vector3f v0 = model.vertexAtIndex(face[i]);
-            Vector3f v1 = model.vertexAtIndex(face[(i+1) % VerticesPerFace]);
+            Vector3f v0 = model.vertexAtIndex(face.vertices[i].positionIndex);
+            Vector3f v1 = model.vertexAtIndex(face.vertices[(i+1) % VerticesPerFace].positionIndex);
             int x0 = (v0.x + 1.f) * ImageWidth / 2.f;
             int y0 = (v0.y + 1.f) * ImageHeight / 2.f;
             int x1 = (v1.x + 1.f) * ImageWidth / 2.f;
@@ -159,16 +167,25 @@ void drawHeadShaded(TGAImage &image, float* zBuffer) {
     ObjModel model;
     model.loadFromFile("obj/head.obj");
     
-    Vector3f lightDirection(0,0,-1.f);
+    TGAImage texture;
+    texture.read_tga_file("obj/head_diffuse.tga");
+    texture.flip_vertically();
+    
+    //Vector3f lightDirection(0,0,-1.f);
     
     const size_t numFaces = model.numFaces();
     for (int faceIndex = 0; faceIndex < numFaces; ++faceIndex) {
         ModelFace face = model.faceAtIndex(faceIndex);
         Vector3f faceWorldCoords[3];
         Vector3f faceScreenCoords[3];
+        Vector2f faceTextureCoords[3];
         for (int iCoord = 0; iCoord < 3; ++iCoord) {
-            Vector3f worldCoords = model.vertexAtIndex(face[iCoord]);
+            ModelVertex modelVertex = face.vertices[iCoord];
+            Vector3f worldCoords = model.vertexAtIndex(modelVertex.positionIndex);
             faceWorldCoords[iCoord] = worldCoords;
+            
+            Vector2f textureCoords = model.texCoordAtIndex(modelVertex.texCoordIndex);
+            faceTextureCoords[iCoord] = textureCoords;
             
             float xPos = (worldCoords.x + 1.f) * ImageWidth / 2.f;
             float yPos = (worldCoords.y + 1.f) * ImageHeight / 2.f;
@@ -176,6 +193,7 @@ void drawHeadShaded(TGAImage &image, float* zBuffer) {
             faceScreenCoords[iCoord] = Vector3f(xPos, yPos, zPos);
         }
         
+        /*
         // Calculate color for triangle
         Vector3f edge1 = faceWorldCoords[2] - faceWorldCoords[0];
         Vector3f edge2 = faceWorldCoords[1] - faceWorldCoords[0];
@@ -184,8 +202,9 @@ void drawHeadShaded(TGAImage &image, float* zBuffer) {
         intensity = clamp(std::abs(intensity), 0.f, 1.f);
         int greyIntensity = static_cast<int>(255 * intensity); // TODO: Gamma correction. (128,128,128) is not half as bright as (255,255,255)
         TGAColor color(greyIntensity, greyIntensity, greyIntensity, 255);
+         */
         
-        triangle(faceScreenCoords, image, zBuffer, color);
+        triangle(faceScreenCoords, faceTextureCoords, texture, image, zBuffer);
     }
 }
 

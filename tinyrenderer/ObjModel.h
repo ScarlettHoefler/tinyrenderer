@@ -14,16 +14,13 @@
 
 #include "Vector.hpp"
 
+struct ModelVertex {
+    int positionIndex;
+    int texCoordIndex;
+};
+
 struct ModelFace {
-    union {
-        struct { int a,b,c; };
-        int raw[3];
-    };
-    
-    int operator[](int i) {
-        assert(i >= 0 && i <= 2);
-        return raw[i];
-    }
+    ModelVertex vertices[3];
 };
 
 class ObjModel {
@@ -34,10 +31,12 @@ public:
     
     size_t numFaces() const { return m_faces.size(); }
     Vector3f vertexAtIndex(int index) const;
+    Vector2f texCoordAtIndex(int index) const;
     ModelFace faceAtIndex(int index) const;
     
 private:
     std::vector<Vector3f> m_vertices;
+    std::vector<Vector2f> m_textureCoordinates;
     std::vector<ModelFace> m_faces;
 };
 

@@ -63,6 +63,7 @@ struct Vector3 {
 };
 
 typedef Vector3<float> Vector3f;
+typedef Vector3<int> Vector3i;
 
 template<typename T>
 Vector3<T> Vector3<T>::cross(const Vector3<T> &rhs) const {
