@@ -32,10 +32,14 @@ struct Vector2 {
 };
 
 typedef Vector2<int> Vector2i;
+typedef Vector2<float> Vector2f;
 
 template<typename T>
 struct Vector3 {
-    T x,y,z;
+    union {
+        struct { T x, y, z; };
+        T raw[3];
+    };
     
     Vector3()
     : Vector3(0,0,0)
@@ -54,6 +58,8 @@ struct Vector3 {
     
     Vector3<T> operator-(const Vector3 &rhs) const;
     Vector3<T> operator*(float rhs) const;
+    
+    T& operator[](int index) const;
 };
 
 typedef Vector3<float> Vector3f;
@@ -103,5 +109,11 @@ template<typename T>
 Vector3<T> operator*(float x, const Vector3<T> &rhs) {
     return rhs * x;
 }
+
+template<typename T>
+T& Vector3<T>::operator[](int index) const {
+    return raw[index];
+}
+
 
 #endif /* Vector_hpp */

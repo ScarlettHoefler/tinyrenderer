@@ -50,68 +50,81 @@ void line(Vector2i v0, Vector2i v1, TGAImage &image, TGAColor color) {
     line(v0.x, v0.y, v1.x, v1.y, image, color);
 }
 
-void sweepLine(int leftX, int rightX, int y, TGAImage &image, TGAColor color) {
-    for (int x = leftX; x <= rightX; ++x) {
-        image.set(x, y, color);
+Vector3f getBarycentricCoordinatesForScreenPoint(Vector3f triangleA, Vector3f triangleB, Vector3f triangleC, Vector3f screenPoint) {
+    // P = A + u(AB) + v(AC)
+    // u(AB) + v(AC) + (PA) = 0
+    // then expand out to each coordinate: u(AB)x + v(AC)x + (PA)x = 0; same for Y coords
+    // to find where these intersect, we can use a cross product. See: https://github.com/ssloy/tinyrenderer/wiki/Lesson-2:-Triangle-rasterization-and-back-face-culling#the-method-i-adopt-for-my-code
+    Vector3f vAB = triangleB - triangleA;
+    Vector3f vAC = triangleC - triangleA;
+    Vector3f vPA = triangleA - screenPoint;
+    
+    Vector3f xVector(vAB.x, vAC.x, vPA.x);
+    Vector3f yVector(vAB.y, vAC.y, vPA.y);
+    Vector3f xCrossY = xVector.cross(yVector);
+    
+    // HACK: avoid divide by zero
+    if (std::abs(xCrossY.z) < std::numeric_limits<float>::epsilon()) {
+        // Just return something with a negative; we'll discard it later anyway
+        return Vector3f(-1.f,1.f,1.f);
     }
+    
+    float v = xCrossY.y / xCrossY.z;
+    float w = xCrossY.x / xCrossY.z;
+    float u = 1.f - ((xCrossY.x + xCrossY.y) / xCrossY.z); // (1-v-w) will give us gaps :c Floating point inaccuracy?
+    return Vector3f(u,v,w);
 }
 
-void triangle(Vector2i v0, Vector2i v1, Vector2i v2, TGAImage &image, TGAColor color) {
-    // Sort the 3 vectors from lowest to highest
-    // 123 -> xx -> xx -> 123
-    // 132 -> xx -> 123 -> 123
-    // 213 -> 123 -> xx -> 123
-    // 231 -> xx -> 213 -> 123
-    // 312 -> 132 -> 123 -> 123
-    // 321 -> 231 -> 213 -> 123
-    if (v0.y > v1.y) {
-        std::swap(v0, v1);
-    }
-    if (v1.y > v2.y) {
-        std::swap(v1, v2);
-    }
-    if (v0.y > v1.y) {
-        std::swap(v0, v1);
-    }
+template<typename T>
+T clamp(T val, T min, T max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
+
+void triangle(Vector3f v0, Vector3f v1, Vector3f v2, TGAImage &image, float* zBuffer, TGAColor color) {
+    Vector3f points[] = {v0, v1, v2};
     
-    int yDistV0toV1 = v1.y - v0.y;
-    int yDistV0toV2 = v2.y - v0.y;
-    int yDistV1toV2 = v2.y - v1.y;
-    
-    // HACK: Avoid divide-by-zero errors. ...this might skip drawing one edge of the triangle properly?
-    if (yDistV0toV1 == 0) yDistV0toV1 = 1;
-    if (yDistV0toV2 == 0) yDistV0toV2 = 1;
-    if (yDistV1toV2 == 0) yDistV1toV2 = 1;
-    
-    // Draw bottom half of triangle
-    for (int curY = v0.y; curY <= v1.y; ++curY) {
-        // Two sides: t0 to t1, and t0 to t2
-        float tV0ToV1 = (float)(curY - v0.y) / yDistV0toV1;
-        float x1 = v0.x + (v1.x - v0.x) * tV0ToV1;
-        
-        float tV0ToV2 = (float)(curY - v0.y) / yDistV0toV2;
-        float x2 = v0.x + (v2.x - v0.x) * tV0ToV2;
-        
-        if (x1 > x2) { std::swap(x1, x2); }
-        
-        int leftX = (int)floor(x1);
-        int rightX = (int)ceil(x2);
-        sweepLine(leftX, rightX, curY, image, color);
+    // Find the bounding rect of our triangle (in pixel coords) so that we only have to iterate over a small area
+    const float floatMin = std::numeric_limits<float>::min();
+    const float floatMax = std::numeric_limits<float>::max();
+    float minX = floatMax;
+    float minY = floatMax;
+    float maxX = floatMin;
+    float maxY = floatMin;
+    for (int pointIndex = 0; pointIndex < 3; ++pointIndex) {
+        Vector3f point = points[pointIndex];
+        minX = std::min(minX, point.x);
+        minY = std::min(minY, point.y);
+        maxX = std::max(maxX, point.x);
+        maxY = std::max(maxY, point.y);
     }
     
-    // Draw top half of triangle
-    for (int curY = v1.y; curY <= v2.y; ++curY) {
-        float tV0toV2 = (float)(curY - v0.y) / yDistV0toV2;
-        float x1 = v0.x + (v2.x - v0.x) * tV0toV2;
-        
-        float tV1toV2 = (float)(curY - v1.y) / yDistV1toV2;
-        float x2 = v1.x + (v2.x - v1.x) * tV1toV2;
-        
-        if (x1 > x2) { std::swap(x1, x2); }
-        
-        int leftX = (int)floor(x1);
-        int rightX = (int)ceil(x2);
-        sweepLine(leftX, rightX, curY, image, color);
+    // Clamp to image bounds
+    const float imageCoordMaxX = image.get_width() - 1;
+    const float imageCoordMaxY = image.get_height() - 1;
+    minX = clamp(minX, 0.f, imageCoordMaxX);
+    minY = clamp(minY, 0.f, imageCoordMaxY);
+    maxX = clamp(maxX, 0.f, imageCoordMaxX);
+    maxY = clamp(maxY, 0.f, imageCoordMaxX);
+    
+    // For each point in our bounding rect, check if our point is within our triangle. If so, draw!
+    int minScreenX = (int)std::floor(minX);
+    int maxScreenX = (int)std::ceil(maxX);
+    int minScreenY = (int)std::floor(minY);
+    int maxScreenY = (int)std::ceil(maxY);
+    for (int xPos = minScreenX; xPos <= maxScreenX; ++xPos) {
+        for (int yPos = minScreenY; yPos <= maxScreenY; ++yPos) {
+            Vector3f screenPoint(xPos, yPos, 0);
+            Vector3f barycentricCoords = getBarycentricCoordinatesForScreenPoint(v0, v1, v2, screenPoint);
+            bool isPointInsideTriangle =    (barycentricCoords.x >= 0)
+                                         && (barycentricCoords.y >= 0)
+                                         && (barycentricCoords.z >= 0);
+            
+            if (isPointInsideTriangle) {
+                image.set(xPos, yPos, color);
+            }
+        }
     }
 }
 
@@ -134,16 +147,7 @@ void drawHeadWireframe(TGAImage &image) {
     }
 }
 
-void drawTestTriangles(TGAImage &image) {
-    Vector2i t0[3] = {Vector2i(10, 70),   Vector2i(50, 160),  Vector2i(70, 80)};
-    Vector2i t1[3] = {Vector2i(180, 50),  Vector2i(150, 1),   Vector2i(70, 180)};
-    Vector2i t2[3] = {Vector2i(180, 150), Vector2i(120, 160), Vector2i(130, 180)};
-    triangle(t0[0], t0[1], t0[2], image, red);
-    triangle(t1[0], t1[1], t1[2], image, white);
-    triangle(t2[0], t2[1], t2[2], image, green);
-}
-
-void drawHeadShaded(TGAImage &image) {
+void drawHeadShaded(TGAImage &image, float* zBuffer) {
     ObjModel model;
     model.loadFromFile("obj/head.obj");
     
@@ -152,15 +156,15 @@ void drawHeadShaded(TGAImage &image) {
     const size_t numFaces = model.numFaces();
     for (int faceIndex = 0; faceIndex < numFaces; ++faceIndex) {
         ModelFace face = model.faceAtIndex(faceIndex);
-        Vector2i faceScreenCoords[3];
         Vector3f faceWorldCoords[3];
+        Vector3f faceScreenCoords[3];
         for (int iCoord = 0; iCoord < 3; ++iCoord) {
             Vector3f worldCoords = model.vertexAtIndex(face[iCoord]);
             faceWorldCoords[iCoord] = worldCoords;
             
             int xPos = (worldCoords.x + 1.f) * ImageWidth / 2.f;
             int yPos = (worldCoords.y + 1.f) * ImageHeight / 2.f;
-            faceScreenCoords[iCoord] = Vector2i(xPos, yPos);
+            faceScreenCoords[iCoord] = Vector3f(xPos, yPos, 0);
         }
         
         // Calculate color for triangle
@@ -172,19 +176,23 @@ void drawHeadShaded(TGAImage &image) {
         if (intensity > 0) { // HACK: This does janky backface culling that isn't entirely correct
             int greyIntensity = static_cast<int>(255 * intensity); // TODO: Gamma correction. (128,128,128) is not half as bright as (255,255,255)
             TGAColor color(greyIntensity, greyIntensity, greyIntensity, 255);
-            triangle(faceScreenCoords[0], faceScreenCoords[1], faceScreenCoords[2], image, color);
+            triangle(faceScreenCoords[0], faceScreenCoords[1], faceScreenCoords[2], image, zBuffer, color);
         }
     }
 }
 
 
 int main(int argc, char** argv) {
-	TGAImage image(ImageWidth, ImageHeight, TGAImage::RGB);
-    
-    drawHeadShaded(image);
-    
-	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-	image.write_tga_file("output.tga");
-	return 0;
-}
+    TGAImage image(ImageWidth, ImageHeight, TGAImage::RGB);
+    const size_t zBufferSize = ImageWidth * ImageHeight;
+    float zBuffer[zBufferSize];
+    for (int i = 0; i < zBufferSize; ++i) {
+        zBuffer[i] = std::numeric_limits<float>::min();
+    }
 
+    drawHeadShaded(image, zBuffer);
+
+    image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
+    image.write_tga_file("output.tga");
+    return 0;
+}
