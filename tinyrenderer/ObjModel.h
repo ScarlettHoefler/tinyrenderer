@@ -15,22 +15,14 @@
 #include "Vector.hpp"
 
 struct ModelFace {
-    int a,b,c;
+    union {
+        struct { int a,b,c; };
+        int raw[3];
+    };
     
     int operator[](int i) {
         assert(i >= 0 && i <= 2);
-        
-        // TODO: There is almost certainly a more elegant way to do this... a union, perhaps?
-        switch(i) {
-            case 0:
-                return a;
-            case 1:
-                return b;
-            case 2:
-                return c;
-            default:
-                return a; // Error
-        }
+        return raw[i];
     }
 };
 

@@ -82,18 +82,16 @@ T clamp(T val, T min, T max) {
     return val;
 }
 
-void triangle(Vector3f v0, Vector3f v1, Vector3f v2, TGAImage &image, float* zBuffer, TGAColor color) {
-    Vector3f points[] = {v0, v1, v2};
-    
+void triangle(const Vector3f points[3], TGAImage &image, float* zBuffer, const TGAColor color) {
     // Find the bounding rect of our triangle (in pixel coords) so that we only have to iterate over a small area
-    const float floatMin = std::numeric_limits<float>::min();
+    const float floatMin = std::numeric_limits<float>::lowest();
     const float floatMax = std::numeric_limits<float>::max();
     float minX = floatMax;
     float minY = floatMax;
     float maxX = floatMin;
     float maxY = floatMin;
     for (int pointIndex = 0; pointIndex < 3; ++pointIndex) {
-        Vector3f point = points[pointIndex];
+        const Vector3f point = points[pointIndex];
         minX = std::min(minX, point.x);
         minY = std::min(minY, point.y);
         maxX = std::max(maxX, point.x);
@@ -116,13 +114,23 @@ void triangle(Vector3f v0, Vector3f v1, Vector3f v2, TGAImage &image, float* zBu
     for (int xPos = minScreenX; xPos <= maxScreenX; ++xPos) {
         for (int yPos = minScreenY; yPos <= maxScreenY; ++yPos) {
             Vector3f screenPoint(xPos, yPos, 0);
-            Vector3f barycentricCoords = getBarycentricCoordinatesForScreenPoint(v0, v1, v2, screenPoint);
+            Vector3f barycentricCoords = getBarycentricCoordinatesForScreenPoint(points[0], points[1], points[2], screenPoint);
             bool isPointInsideTriangle =    (barycentricCoords.x >= 0)
                                          && (barycentricCoords.y >= 0)
                                          && (barycentricCoords.z >= 0);
             
             if (isPointInsideTriangle) {
-                image.set(xPos, yPos, color);
+                float zPos = 0;
+                for (int i = 0; i < 3; ++i) {
+                    zPos += points[i].z * barycentricCoords[i];
+                }
+                
+                int zBufferIndex = xPos + (yPos * image.get_width());
+                float currentZAtPosition = zBuffer[zBufferIndex];
+                if (currentZAtPosition < zPos) {
+                    zBuffer[zBufferIndex] = zPos;
+                    image.set(xPos, yPos, color);
+                }
             }
         }
     }
@@ -162,9 +170,10 @@ void drawHeadShaded(TGAImage &image, float* zBuffer) {
             Vector3f worldCoords = model.vertexAtIndex(face[iCoord]);
             faceWorldCoords[iCoord] = worldCoords;
             
-            int xPos = (worldCoords.x + 1.f) * ImageWidth / 2.f;
-            int yPos = (worldCoords.y + 1.f) * ImageHeight / 2.f;
-            faceScreenCoords[iCoord] = Vector3f(xPos, yPos, 0);
+            float xPos = (worldCoords.x + 1.f) * ImageWidth / 2.f;
+            float yPos = (worldCoords.y + 1.f) * ImageHeight / 2.f;
+            float zPos = worldCoords.z;
+            faceScreenCoords[iCoord] = Vector3f(xPos, yPos, zPos);
         }
         
         // Calculate color for triangle
@@ -172,22 +181,22 @@ void drawHeadShaded(TGAImage &image, float* zBuffer) {
         Vector3f edge2 = faceWorldCoords[1] - faceWorldCoords[0];
         Vector3f normal = (edge1.cross(edge2)).normalized();
         float intensity = normal.dot(lightDirection);
+        intensity = clamp(std::abs(intensity), 0.f, 1.f);
+        int greyIntensity = static_cast<int>(255 * intensity); // TODO: Gamma correction. (128,128,128) is not half as bright as (255,255,255)
+        TGAColor color(greyIntensity, greyIntensity, greyIntensity, 255);
         
-        if (intensity > 0) { // HACK: This does janky backface culling that isn't entirely correct
-            int greyIntensity = static_cast<int>(255 * intensity); // TODO: Gamma correction. (128,128,128) is not half as bright as (255,255,255)
-            TGAColor color(greyIntensity, greyIntensity, greyIntensity, 255);
-            triangle(faceScreenCoords[0], faceScreenCoords[1], faceScreenCoords[2], image, zBuffer, color);
-        }
+        triangle(faceScreenCoords, image, zBuffer, color);
     }
 }
 
 
 int main(int argc, char** argv) {
     TGAImage image(ImageWidth, ImageHeight, TGAImage::RGB);
+    
     const size_t zBufferSize = ImageWidth * ImageHeight;
     float zBuffer[zBufferSize];
     for (int i = 0; i < zBufferSize; ++i) {
-        zBuffer[i] = std::numeric_limits<float>::min();
+        zBuffer[i] = std::numeric_limits<float>::lowest();
     }
 
     drawHeadShaded(image, zBuffer);
